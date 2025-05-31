@@ -4,9 +4,18 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ShoppingCart, Menu, X, Search, User } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ShoppingCart, Menu, X, Search, User, Package } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useCart } from "@/context/cart-context"
+import { useAuth } from "@/context/auth-context"
 import CartDrawer from "@/components/cart/cart-drawer"
 import { Input } from "@/components/ui/input" // Added for search
 
@@ -15,6 +24,7 @@ export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false) // State for mobile search
   const pathname = usePathname()
   const { itemCount, setIsOpen: setCartOpen } = useCart() // Renamed setIsOpen to avoid conflict
+  const { user, isAuthenticated, logout } = useAuth()
 
   const routes = [
     { name: "Home", path: "/" },
@@ -78,12 +88,46 @@ export default function Header() {
                 <Search className="h-5 w-5" />
                 <span className="sr-only">Search</span>
               </Button>
-              <Button variant="ghost" size="icon" asChild>
-                <Link href="/sign-in">
-                  <User className="h-5 w-5" />
-                  <span className="sr-only">Account</span>
-                </Link>
-              </Button>
+              
+              {/* User Account Button/Dropdown */}
+              {isAuthenticated ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <User className="h-5 w-5" />
+                      <span className="sr-only">Account menu</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>
+                      My Account
+                      {user?.email && (
+                        <div className="text-xs text-muted-foreground font-normal">
+                          {user.email}
+                        </div>
+                      )}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/profile">Profile</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/orders">My Orders</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={logout}>
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button variant="ghost" size="icon" asChild>
+                  <Link href="/sign-in">
+                    <User className="h-5 w-5" />
+                    <span className="sr-only">Sign In</span>
+                  </Link>
+                </Button>
+              )}
               <Button variant="ghost" size="icon" onClick={() => setCartOpen(true)} className="relative">
                 <ShoppingCart className="h-5 w-5" />
                 {itemCount > 0 && (
@@ -153,7 +197,53 @@ export default function Header() {
                 ))}
               </nav>
               <div className="border-t pt-4 mt-4 space-y-2">
-                 <Link
+                {isAuthenticated ? (
+                  <>
+                    <div className="px-3 py-2">
+                      <p className="text-sm font-medium">
+                        {user?.firstName || user?.email}
+                      </p>
+                      {user?.email && (
+                        <p className="text-xs text-muted-foreground">
+                          {user.email}
+                        </p>
+                      )}
+                    </div>
+                    <Link
+                      href="/profile"
+                      className={cn(
+                        "flex items-center rounded-md px-3 py-2 text-base font-medium hover:bg-accent hover:text-accent-foreground text-muted-foreground"
+                      )}
+                      onClick={closeMenu}
+                    >
+                      <User className="mr-2 h-5 w-5" />
+                      Profile
+                    </Link>
+                    <Link
+                      href="/orders"
+                      className={cn(
+                        "flex items-center rounded-md px-3 py-2 text-base font-medium hover:bg-accent hover:text-accent-foreground text-muted-foreground"
+                      )}
+                      onClick={closeMenu}
+                    >
+                      <Package className="mr-2 h-5 w-5" />
+                      My Orders
+                    </Link>
+                    <button
+                      onClick={() => {
+                        logout();
+                        closeMenu();
+                      }}
+                      className={cn(
+                        "flex items-center rounded-md px-3 py-2 text-base font-medium hover:bg-accent hover:text-accent-foreground text-muted-foreground w-full text-left"
+                      )}
+                    >
+                      <User className="mr-2 h-5 w-5" />
+                      Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <Link
                     href="/sign-in"
                     className={cn(
                       "flex items-center rounded-md px-3 py-2 text-base font-medium hover:bg-accent hover:text-accent-foreground text-muted-foreground"
@@ -161,9 +251,9 @@ export default function Header() {
                     onClick={closeMenu}
                   >
                     <User className="mr-2 h-5 w-5" />
-                    Account
+                    Sign In
                   </Link>
-                {/* Add other actions like Wishlist, Orders if needed */}
+                )}
               </div>
             </div>
           </div>

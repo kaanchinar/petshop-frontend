@@ -18,7 +18,7 @@ export default function ProductCard({ product, viewMode = "grid" }: ProductCardP
   if (viewMode === "list") {
     return (
       <div className="group border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col sm:flex-row">
-        <Link href="#" className="block relative h-48 sm:h-auto sm:w-1/3 lg:w-1/4 flex-shrink-0">
+        <Link href={`/products/${product.id}`} className="block relative h-48 sm:h-auto sm:w-1/3 lg:w-1/4 flex-shrink-0">
           <Image
             src={product.image || "/placeholder.svg"}
             alt={product.name}
@@ -93,7 +93,7 @@ export default function ProductCard({ product, viewMode = "grid" }: ProductCardP
   // Default Grid View
   return (
     <div className="group border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-      <Link href="#" className="block relative h-48">
+      <Link href={`/products/${product.id}`} className="block relative h-48">
         <Image
           src={product.image || "/placeholder.svg"}
           alt={product.name}

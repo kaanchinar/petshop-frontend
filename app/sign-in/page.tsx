@@ -16,42 +16,52 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { authApi } from "@/lib/services/authApi"; // Import the authApi
-import type { LoginRequest } from "@/lib/types"; // Import LoginRequest type
+import { usePostApiAuthLogin } from "@/lib/api/auth/auth";
+import { useAuth } from "@/context/auth-context";
+import type { LoginDto } from "@/lib/api/petPetAPI.schemas";
 
 export default function SignInPage() {
   const router = useRouter();
-  const [email, setEmail] = useState(""); // Changed to email from username for LoginRequest
+  const { login } = useAuth();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState<string | null>(null); // For displaying login errors
-  const [isSubmitting, setIsSubmitting] = useState(false); // For loading state
+  const [error, setError] = useState<string | null>(null);
+  
+  const loginMutation = usePostApiAuthLogin();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     setError(null);
 
-    const credentials: LoginRequest = {
-      username: email, // Mapping email state to username for the API
+    const credentials: LoginDto = {
+      email: email,
       password: password,
     };
 
     try {
-      const response = await authApi.login(credentials);
-      // Assuming a successful login returns a token or some user data
-      // Store the token (e.g., in localStorage or context)
-      console.log("Login successful:", response);
-      // For now, just an alert and redirect. Implement proper session management.
-      alert("Login successful!");
-      router.push("/"); // Redirect to main page
+      const response = await loginMutation.mutateAsync({ data: credentials });
+      
+      // With HTTP-only cookies, the token is automatically stored in cookies
+      // We just need to trigger a refetch of user data
+      const authData = response.data;
+      
+      if (authData?.user || authData?.token) {
+        // Call login to trigger auth context to refetch user data
+        login(authData.token || '');
+        
+        console.log("Login successful:", response);
+        router.push("/");
+      } else {
+        throw new Error("Invalid response format");
+      }
     } catch (err) {
       console.error("Login failed:", err);
-      setError(
-        err instanceof Error ? err.message : "Invalid email or password."
-      );
-    } finally {
-      setIsSubmitting(false);
+      const errorMessage = err instanceof Error && err.message 
+        ? err.message 
+        : (err as any)?.response?.data?.message 
+        || "Invalid email or password.";
+      setError(errorMessage);
     }
   };
 
@@ -83,7 +93,7 @@ export default function SignInPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  disabled={isSubmitting}
+                  disabled={loginMutation.isPending}
                 />
               </div>
               <div className="space-y-2">
@@ -103,7 +113,7 @@ export default function SignInPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  disabled={isSubmitting}
+                  disabled={loginMutation.isPending}
                 />
               </div>
               <div className="flex items-center space-x-2">
@@ -113,14 +123,14 @@ export default function SignInPage() {
                   onCheckedChange={(checked) =>
                     setRememberMe(checked as boolean)
                   }
-                  disabled={isSubmitting}
+                  disabled={loginMutation.isPending}
                 />
                 <Label htmlFor="remember" className="text-sm font-normal">
                   Remember me for 30 days
                 </Label>
               </div>
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Signing In..." : "Sign In"}
+              <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
+                {loginMutation.isPending ? "Signing In..." : "Sign In"}
               </Button>
             </form>
           </CardContent>
@@ -168,7 +178,7 @@ export default function SignInPage() {
             </div>
             <p className="text-center text-sm text-muted-foreground mt-4">
               Don't have an account?{" "}
-              <Link href="#" className="text-primary hover:underline">
+              <Link href="/sign-up" className="text-primary hover:underline">
                 Sign up
               </Link>
             </p>

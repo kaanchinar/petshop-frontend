@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link"; // Added import for Link
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,114 +13,73 @@ import {
 } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import ProductForm from "@/components/admin/product-form";
-import { adminApi } from "@/lib/services/adminApi"; // Corrected: Removed Product import from here
-import { Product as ApiProduct } from "@/lib/types"; // Corrected: Import Product from lib/types and alias as ApiProduct
-// import { getProductById } from "@/lib/products" // Old mock data import
-// import { useProductAdmin } from "@/context/product-admin-context" // Old context import
-// import type { Product } from "@/lib/types" // Old type import
+import { useGetApiProductsId, usePutApiProductsId } from "@/lib/api/products/products";
+import { productDtoToProduct, productToUpdateProductDto } from "@/lib/api-types";
+import type { Product } from "@/lib/types";
 
-export default function EditProductPage({
+export default async function EditProductPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
+  
+  return <EditProductContent id={id} />;
+}
+
+function EditProductContent({ id }: { id: string }) {
   const router = useRouter();
-  // const { updateProduct } = useProductAdmin() // Old context usage
-  const [product, setProduct] = useState<ApiProduct | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const productId = parseInt(id);
+  const { data: productData, isLoading, error: fetchError } = useGetApiProductsId(productId);
+  
+  const updateProductMutation = usePutApiProductsId();
+  
+  const product = productData?.data ? productDtoToProduct(productData.data) : null;
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      if (!params.id) {
-        setError("Product ID is missing.");
-        setLoading(false);
-        router.push("/admin/products"); // Redirect if no ID
-        return;
-      }
-      try {
-        setLoading(true);
-        const fetchedProduct = await adminApi.getProductById(params.id);
-        if (fetchedProduct) {
-          setProduct(fetchedProduct);
-        } else {
-          setError("Product not found.");
-          router.push("/admin/products"); // Redirect if product not found
-        }
-        setError(null);
-      } catch (err) {
-        console.error("Failed to fetch product:", err);
-        setError(
-          err instanceof Error ? err.message : "An unknown error occurred"
-        );
-        // Optionally redirect or show a more prominent error
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProduct();
-  }, [params.id, router]);
-
-  const handleSubmit = async (productData: Omit<ApiProduct, "id">) => {
-    if (product && product.id) {
-      setIsSubmitting(true);
-      setError(null);
-      try {
-        // productData is Omit<ApiProduct, "id">. We need to add the existing id.
-        const updatedProductData: ApiProduct = {
-          ...productData,
-          id: product.id,
-        };
-        const updatedProduct = await adminApi.updateProduct(
-          product.id,
-          updatedProductData
-        );
-        console.log("Product updated:", updatedProduct);
-        // Optionally, show a success toast/notification
-        // Redirect to the products list or the updated product's view page
-        router.push("/admin/products");
-      } catch (err) {
-        console.error("Failed to update product:", err);
-        setError(
-          err instanceof Error
-            ? err.message
-            : "An unknown error occurred while updating the product."
-        );
-        // Optionally, show an error toast/notification
-      } finally {
-        setIsSubmitting(false);
-      }
+  const handleSubmit = async (productData: Omit<Product, "id">) => {
+    setError(null);
+    try {
+      const updateDto = productToUpdateProductDto(productData, productId);
+      await updateProductMutation.mutateAsync({ 
+        id: productId, 
+        data: updateDto 
+      });
+      router.push("/admin/products");
+    } catch (err) {
+      console.error("Failed to update product:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An unknown error occurred while updating the product."
+      );
     }
   };
 
-  if (loading) {
-    return <div>Loading product details...</div>;
-  }
-
-  if (error && !product) {
-    // If error and no product, show error prominently
+  if (isLoading) {
     return (
-      <div className="p-4 text-red-600">
-        Error: {error}.{" "}
-        <Link href="/admin/products" className="underline">
-          Go back to products
-        </Link>
-        .
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-lg text-muted-foreground">Loading product...</p>
+          </div>
+        </div>
       </div>
     );
   }
-
-  if (!product) {
-    // Should be caught by loading or error state, but as a fallback
+  if (fetchError || !product) {
     return (
-      <div>
-        Product not found.{" "}
-        <Link href="/admin/products" className="underline">
-          Go back to products
-        </Link>
-        .
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-lg text-destructive mb-4">Product not found</p>
+            <Button asChild>
+              <Link href="/admin/products">Go back to products</Link>
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -150,7 +109,7 @@ export default function EditProductPage({
           <ProductForm
             initialData={product}
             onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
+            isSubmitting={updateProductMutation.isPending}
           />
         </CardContent>
       </Card>

@@ -1,39 +1,70 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft, Edit, Trash2 } from "lucide-react"
-import { getProductById } from "@/lib/products"
-import { useProductAdmin } from "@/context/product-admin-context"
+import { useGetApiProductsId, useDeleteApiProductsId } from "@/lib/api/products/products"
+import { productDtoToProduct } from "@/lib/api-types"
 import DeleteProductDialog from "@/components/admin/delete-product-dialog"
-import type { Product } from "@/lib/types"
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
+export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  
+  return <ProductDetailContent id={id} />;
+}
+
+function ProductDetailContent({ id }: { id: string }) {
   const router = useRouter()
-  const { deleteProduct } = useProductAdmin()
-  const [product, setProduct] = useState<Product | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  
+  const productId = parseInt(id)
+  const { data: productData, isLoading, error } = useGetApiProductsId(productId)
+  const deleteProductMutation = useDeleteApiProductsId()
+  
+  const product = productData?.data ? productDtoToProduct(productData.data) : null
 
-  useEffect(() => {
-    const fetchedProduct = getProductById(params.id)
-    if (fetchedProduct) {
-      setProduct(fetchedProduct)
-    } else {
-      router.push("/admin/products")
-    }
-  }, [params.id, router])
-
-  const handleDelete = () => {
-    if (product) {
-      deleteProduct(product.id)
+  const handleDelete = async () => {
+    try {
+      await deleteProductMutation.mutateAsync({ id: productId })
       setDeleteDialogOpen(false)
       router.push("/admin/products")
+    } catch (err) {
+      console.error("Failed to delete product:", err)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-lg text-muted-foreground">Loading product...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !product) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-lg text-destructive mb-4">Product not found</p>
+            <Button asChild>
+              <Link href="/admin/products">Go back to products</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (!product) {

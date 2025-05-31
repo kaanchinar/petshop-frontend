@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -8,35 +8,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { adminApi, Product as ApiProduct } from "@/lib/services/adminApi"; // Updated import
+import { useGetApiProducts } from "@/lib/api/products/products";
+import { productDtoToProduct } from "@/lib/api-types";
 import { DollarSign, Package, ShoppingCart, Users } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminDashboard() {
-  const [products, setProducts] = useState<ApiProduct[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: productsData, isLoading, error } = useGetApiProducts({
+    Page: 1,
+    PageSize: 100, // Get more products for admin dashboard stats
+  });
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const fetchedProducts = await adminApi.getAllProducts();
-        setProducts(fetchedProducts || []); // Handle null response from API
-        setError(null);
-      } catch (err) {
-        console.error("Failed to fetch products:", err);
-        setError(
-          err instanceof Error ? err.message : "An unknown error occurred"
-        );
-        setProducts([]); // Clear products on error
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
+  // Convert API products to legacy format
+  const products = useMemo(() => {
+    if (!productsData?.data?.items) return [];
+    return productsData.data.items.map(productDtoToProduct);
+  }, [productsData]);
 
   // Calculate some stats for the dashboard
   const totalProducts = products.length;
@@ -44,9 +31,8 @@ export default function AdminDashboard() {
     (sum, product) => sum + (product.price || 0),
     0
   );
-  // Assuming 'stock' indicates availability. If stock is 0 or undefined, it's out of stock.
   const lowStockProducts = products.filter(
-    (product) => (product.stock ?? 0) === 0
+    (product) => !product.inStock
   ).length;
 
   const stats = [
@@ -81,12 +67,29 @@ export default function AdminDashboard() {
     },
   ];
 
-  if (loading) {
-    return <p>Loading dashboard data...</p>;
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-lg text-muted-foreground">Loading dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <p>Error loading dashboard: {error}</p>;
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-lg text-destructive">Error loading dashboard</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -153,14 +156,12 @@ export default function AdminDashboard() {
                       </p>
                       <p
                         className={`text-sm ${
-                          (product.stock ?? 0) > 0
+                          product.inStock
                             ? "text-green-600"
                             : "text-red-600"
                         }`}
                       >
-                        {(product.stock ?? 0) > 0
-                          ? `In Stock (${product.stock})`
-                          : "Out of Stock"}
+                        {product.inStock ? "In Stock" : "Out of Stock"}
                       </p>
                     </div>
                   </div>

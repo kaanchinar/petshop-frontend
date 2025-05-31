@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -31,10 +31,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { adminApi } from "@/lib/services/adminApi"; // Updated import
-import { Product as ApiProduct } from "@/lib/types"; // Import Product from lib/types
-// import { getAllProducts } from "@/lib/products" // Old mock data import
-// import { useProductAdmin } from "@/context/product-admin-context" // Old context import
+import { useGetApiProducts, useDeleteApiProductsId } from "@/lib/api/products/products";
+import { productDtoToProduct } from "@/lib/api-types";
+import type { ProductDto } from "@/lib/api/petPetAPI.schemas";
+import type { Product } from "@/lib/types";
 import {
   Plus,
   Search,
@@ -50,86 +50,73 @@ import DeleteProductDialog from "@/components/admin/delete-product-dialog";
 export default function ProductsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // const { deleteProduct } = useProductAdmin() // Old context usage
 
-  const [products, setProducts] = useState<ApiProduct[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<ApiProduct[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortField, setSortField] = useState("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [productToDelete, setProductToDelete] = useState<ApiProduct | null>(
-    null
-  );
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
-  // Load products from API
+  // API hooks
+  const { data: productsData, isLoading, error, refetch } = useGetApiProducts({
+    Page: 1,
+    PageSize: 100, // Load more products for admin
+    SearchTerm: searchQuery || undefined,
+  });
+  
+  const deleteProductMutation = useDeleteApiProductsId();
+
+  // Convert API products to legacy format
+  const products = useMemo(() => {
+    if (!productsData?.data?.items) return [];
+    return productsData.data.items.map(productDtoToProduct);
+  }, [productsData]);
+
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+
+  // Apply URL params for filtering/sorting
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const fetchedProducts = await adminApi.getAllProducts(
-          categoryFilter === "all" ? undefined : categoryFilter
-        );
-        setProducts(fetchedProducts || []);
-        setError(null);
-      } catch (err) {
-        console.error("Failed to fetch products:", err);
-        setError(
-          err instanceof Error ? err.message : "An unknown error occurred"
-        );
-        setProducts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-
-    // Apply any URL params for filtering/sorting - this might need adjustment if API handles it
     const category = searchParams.get("category");
     const search = searchParams.get("search");
     const sort = searchParams.get("sort");
     const direction = searchParams.get("direction");
 
     if (category) setCategoryFilter(category);
-    if (search) setSearchQuery(search); // Client-side search for now
+    if (search) setSearchQuery(search);
     if (sort) setSortField(sort);
     if (direction && (direction === "asc" || direction === "desc"))
       setSortDirection(direction);
-  }, [searchParams, categoryFilter]); // Re-fetch if categoryFilter changes for API-side filtering
+  }, [searchParams]);
 
-  // Filter and sort products when filters change (client-side for now, except category)
+  // Filter and sort products when data or filters change
   useEffect(() => {
     let result = [...products];
 
-    // Apply search filter (client-side)
+    // Apply search filter
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (product) =>
-          product?.name?.toLowerCase().includes(query) ||
-          (product.description &&
-            product.description.toLowerCase().includes(query)) // description can be null
-        // product.brand is not in ApiProduct, remove or adjust if needed
+      result = result.filter((product) =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.brand.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
-    // Apply sorting (client-side)
+    // Apply category filter
+    if (categoryFilter !== "all") {
+      result = result.filter((product) =>
+        product.category.toLowerCase() === categoryFilter.toLowerCase()
+      );
+    }
+
+    // Sort products
     result.sort((a, b) => {
-      let aValue: any = a[sortField as keyof ApiProduct];
-      let bValue: any = b[sortField as keyof ApiProduct];
+      let aValue: any = a[sortField as keyof Product];
+      let bValue: any = b[sortField as keyof Product];
 
       // Handle string comparison
-      if (typeof aValue === "string") {
-        aValue = aValue.toLowerCase();
-        bValue = (bValue || "").toLowerCase(); // Ensure bValue is a string
-      }
-      if (typeof bValue === "string") {
-        bValue = bValue.toLowerCase();
-      }
+      if (typeof aValue === "string") aValue = aValue.toLowerCase();
+      if (typeof bValue === "string") bValue = bValue.toLowerCase();
 
       if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
       if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
@@ -137,7 +124,7 @@ export default function ProductsPage() {
     });
 
     setFilteredProducts(result);
-  }, [products, searchQuery, sortField, sortDirection]);
+  }, [products, searchQuery, categoryFilter, sortField, sortDirection]);
 
   // Handle sort toggle
   const toggleSort = (field: string) => {
@@ -150,7 +137,7 @@ export default function ProductsPage() {
   };
 
   // Handle product deletion
-  const handleDeleteClick = (product: ApiProduct) => {
+  const handleDeleteClick = (product: Product) => {
     setProductToDelete(product);
     setDeleteDialogOpen(true);
   };
@@ -158,30 +145,41 @@ export default function ProductsPage() {
   const confirmDelete = async () => {
     if (productToDelete && productToDelete.id) {
       try {
-        await adminApi.deleteProduct(productToDelete.id);
-        // Remove from local state
-        setProducts(products.filter((p) => p.id !== productToDelete.id));
+        await deleteProductMutation.mutateAsync({ id: parseInt(productToDelete.id) });
+        refetch(); // Refresh the products list
         setDeleteDialogOpen(false);
         setProductToDelete(null);
-        // Optionally, show a success toast/notification
       } catch (err) {
         console.error("Failed to delete product:", err);
-        // Optionally, show an error toast/notification
-        setError(
-          err instanceof Error ? err.message : "Failed to delete product"
-        );
-        setDeleteDialogOpen(false); // Close dialog even on error, or keep open for retry
+        setDeleteDialogOpen(false);
       }
     }
   };
 
-  if (loading) {
-    return <p>Loading products...</p>;
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-lg text-muted-foreground">Loading products...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  if (error && !products.length) {
-    // Show error prominently if no products loaded
-    return <p>Error loading products: {error}. Please try refreshing.</p>;
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-lg text-destructive mb-4">Failed to load products</p>
+            <Button onClick={() => refetch()}>Try Again</Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -199,8 +197,6 @@ export default function ProductsPage() {
           </Link>
         </Button>
       </div>
-      {error && <p className="text-red-500">Error: {error}</p>}{" "}
-      {/* Show non-blocking error */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle>Product Inventory</CardTitle>
@@ -229,7 +225,7 @@ export default function ProductsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
-                    {/* Dynamically populate categories if possible, or use predefined ones */}
+                    {/* Generate categories dynamically from loaded products */}
                     {[...new Set(products.map((p) => p.category))]
                       .sort()
                       .map((cat) => (
@@ -241,9 +237,6 @@ export default function ProductsPage() {
                           {cat}
                         </SelectItem>
                       ))}
-                    {/* <SelectItem value="cats">Cats</SelectItem>
-                    <SelectItem value="dogs">Dogs</SelectItem>
-                    <SelectItem value="other-animals">Other Animals</SelectItem> */}
                   </SelectContent>
                 </Select>
               </div>
@@ -347,8 +340,6 @@ export default function ProductsPage() {
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem asChild>
                               <Link href={`/admin/products/${product.id}/edit`}>
-                                {" "}
-                                {/* Ensure ID is available */}
                                 <Edit className="mr-2 h-4 w-4" /> Edit
                               </Link>
                             </DropdownMenuItem>
@@ -357,8 +348,6 @@ export default function ProductsPage() {
                                 href={`/products/${product.id}`}
                                 target="_blank"
                               >
-                                {" "}
-                                {/* View on site */}
                                 <Eye className="mr-2 h-4 w-4" /> View
                               </Link>
                             </DropdownMenuItem>
@@ -383,7 +372,7 @@ export default function ProductsPage() {
       {productToDelete && (
         <DeleteProductDialog
           open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen} // Changed from onClose to onOpenChange and passed setDeleteDialogOpen directly
+          onOpenChange={setDeleteDialogOpen}
           onConfirm={confirmDelete}
           productName={productToDelete.name || 'this product'}
         />
