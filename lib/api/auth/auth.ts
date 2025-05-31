@@ -27,9 +27,13 @@ import type {
 import type {
   AuthResponseDtoApiResponse,
   BooleanApiResponse,
+  GetApiAuthGoogleCallbackParams,
+  GetApiAuthGoogleUrlParams,
+  GoogleTokenDto,
   LoginDto,
   RefreshTokenDto,
   RegisterDto,
+  StringApiResponse,
   UserDtoApiResponse
 } from '../petPetAPI.schemas';
 
@@ -397,6 +401,228 @@ export function useGetApiAuthMe<TData = Awaited<ReturnType<typeof getApiAuthMe>>
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiAuthMeQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+export const postApiAuthGoogle = (
+    googleTokenDto: GoogleTokenDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxios<AuthResponseDtoApiResponse>(
+      {url: `http://localhost:8080/api/Auth/google`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: googleTokenDto, signal
+    },
+      );
+    }
+  
+
+
+export const getPostApiAuthGoogleMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthGoogle>>, TError,{data: GoogleTokenDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAuthGoogle>>, TError,{data: GoogleTokenDto}, TContext> => {
+
+const mutationKey = ['postApiAuthGoogle'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAuthGoogle>>, {data: GoogleTokenDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiAuthGoogle(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAuthGoogleMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAuthGoogle>>>
+    export type PostApiAuthGoogleMutationBody = GoogleTokenDto
+    export type PostApiAuthGoogleMutationError = unknown
+
+    export const usePostApiAuthGoogle = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthGoogle>>, TError,{data: GoogleTokenDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAuthGoogle>>,
+        TError,
+        {data: GoogleTokenDto},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiAuthGoogleMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    export const getApiAuthGoogleUrl = (
+    params?: GetApiAuthGoogleUrlParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxios<StringApiResponse>(
+      {url: `http://localhost:8080/api/Auth/google/url`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+export const getGetApiAuthGoogleUrlQueryKey = (params?: GetApiAuthGoogleUrlParams,) => {
+    return [`http://localhost:8080/api/Auth/google/url`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getGetApiAuthGoogleUrlQueryOptions = <TData = Awaited<ReturnType<typeof getApiAuthGoogleUrl>>, TError = unknown>(params?: GetApiAuthGoogleUrlParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthGoogleUrl>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAuthGoogleUrlQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAuthGoogleUrl>>> = ({ signal }) => getApiAuthGoogleUrl(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAuthGoogleUrl>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAuthGoogleUrlQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAuthGoogleUrl>>>
+export type GetApiAuthGoogleUrlQueryError = unknown
+
+
+export function useGetApiAuthGoogleUrl<TData = Awaited<ReturnType<typeof getApiAuthGoogleUrl>>, TError = unknown>(
+ params: undefined |  GetApiAuthGoogleUrlParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthGoogleUrl>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAuthGoogleUrl>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAuthGoogleUrl>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAuthGoogleUrl<TData = Awaited<ReturnType<typeof getApiAuthGoogleUrl>>, TError = unknown>(
+ params?: GetApiAuthGoogleUrlParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthGoogleUrl>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAuthGoogleUrl>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAuthGoogleUrl>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAuthGoogleUrl<TData = Awaited<ReturnType<typeof getApiAuthGoogleUrl>>, TError = unknown>(
+ params?: GetApiAuthGoogleUrlParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthGoogleUrl>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiAuthGoogleUrl<TData = Awaited<ReturnType<typeof getApiAuthGoogleUrl>>, TError = unknown>(
+ params?: GetApiAuthGoogleUrlParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthGoogleUrl>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAuthGoogleUrlQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+export const getApiAuthGoogleCallback = (
+    params?: GetApiAuthGoogleCallbackParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxios<void>(
+      {url: `http://localhost:8080/api/Auth/google/callback`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+export const getGetApiAuthGoogleCallbackQueryKey = (params?: GetApiAuthGoogleCallbackParams,) => {
+    return [`http://localhost:8080/api/Auth/google/callback`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getGetApiAuthGoogleCallbackQueryOptions = <TData = Awaited<ReturnType<typeof getApiAuthGoogleCallback>>, TError = unknown>(params?: GetApiAuthGoogleCallbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthGoogleCallback>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAuthGoogleCallbackQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAuthGoogleCallback>>> = ({ signal }) => getApiAuthGoogleCallback(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAuthGoogleCallback>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAuthGoogleCallbackQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAuthGoogleCallback>>>
+export type GetApiAuthGoogleCallbackQueryError = unknown
+
+
+export function useGetApiAuthGoogleCallback<TData = Awaited<ReturnType<typeof getApiAuthGoogleCallback>>, TError = unknown>(
+ params: undefined |  GetApiAuthGoogleCallbackParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthGoogleCallback>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAuthGoogleCallback>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAuthGoogleCallback>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAuthGoogleCallback<TData = Awaited<ReturnType<typeof getApiAuthGoogleCallback>>, TError = unknown>(
+ params?: GetApiAuthGoogleCallbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthGoogleCallback>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAuthGoogleCallback>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAuthGoogleCallback>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAuthGoogleCallback<TData = Awaited<ReturnType<typeof getApiAuthGoogleCallback>>, TError = unknown>(
+ params?: GetApiAuthGoogleCallbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthGoogleCallback>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiAuthGoogleCallback<TData = Awaited<ReturnType<typeof getApiAuthGoogleCallback>>, TError = unknown>(
+ params?: GetApiAuthGoogleCallbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAuthGoogleCallback>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAuthGoogleCallbackQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

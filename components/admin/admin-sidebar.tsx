@@ -45,7 +45,22 @@ export default function AdminSidebar() {
         { title: "Add Product", href: "/admin/products/new" },
         { title: "Categories", href: "/admin/products/categories" },
       ],
-    }
+    },
+    {
+      title: "Orders",
+      icon: <ShoppingCart className="h-5 w-5" />,
+      href: "/admin/orders",
+      submenu: [
+        { title: "All Orders", href: "/admin/orders" },
+        { title: "Pending Orders", href: "/admin/orders?status=pending" },
+        { title: "Completed Orders", href: "/admin/orders?status=completed" },
+      ],
+    },
+    {
+      title: "Users",
+      icon: <Users className="h-5 w-5" />,
+      href: "/admin/users",
+    },
   ]
 
   return (

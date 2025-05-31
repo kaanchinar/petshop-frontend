@@ -35,6 +35,7 @@ interface CartContextType {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   isLoading: boolean;
+  isAdding: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -42,6 +43,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
 
   // API hooks
   const { data: cartData, isLoading, refetch } = useGetApiCart();
@@ -65,7 +67,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
 
   const addItem = useCallback(async (product: Product) => {
+    if (isAdding) return; // Prevent double-clicks
+    
     try {
+      setIsAdding(true);
       const addToCartDto: AddToCartDto = {
         productId: parseInt(product.id),
         quantity: 1,
@@ -76,8 +81,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setIsOpen(true);
     } catch (error) {
       console.error("Failed to add item to cart:", error);
+    } finally {
+      setIsAdding(false);
     }
-  }, [addToCartMutation, refetch]);
+  }, [addToCartMutation, refetch, isAdding]);
 
   const removeItem = useCallback(async (productId: string) => {
     try {
@@ -136,6 +143,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         isOpen,
         setIsOpen,
         isLoading,
+        isAdding,
       }}
     >
       {children}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/auth-context";
-import { redirect } from "next/navigation";
+import { AuthGuard } from "@/components/auth-guard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,27 +15,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { CalendarDays, Mail, User, UserCheck } from "lucide-react";
 
-export default function ProfilePage() {
-  const { user, isAuthenticated, isLoading } = useAuth();
-
-  // Redirect to sign-in if not authenticated
-  if (!isLoading && !isAuthenticated) {
-    redirect("/sign-in");
-  }
-
-  // Show loading state while checking authentication
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-            <div className="h-64 bg-gray-200 rounded"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+function ProfileContent() {
+  const { user } = useAuth();
 
   // Show error state if user is not loaded
   if (!user) {
@@ -97,71 +78,57 @@ export default function ProfilePage() {
                 disabled
                 className="bg-muted"
               />
-              <p className="text-sm text-muted-foreground">
-                Your email address cannot be changed
-              </p>
             </div>
 
-            <Separator />
-
-            {/* First Name */}
+            {/* Name */}
             <div className="space-y-2">
-              <Label htmlFor="firstName" className="flex items-center gap-2">
+              <Label htmlFor="name" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
-                First Name
+                Name
               </Label>
               <Input
-                id="firstName"
+                id="name"
                 type="text"
-                value={user.firstName || ""}
+                value={
+                  user.firstName && user.lastName 
+                    ? `${user.firstName} ${user.lastName}`
+                    : user.firstName || user.lastName || user.email?.split("@")[0] || ""
+                }
                 disabled
                 className="bg-muted"
-                placeholder="Not provided"
               />
             </div>
 
-            {/* Last Name */}
+            {/* Account Creation Date */}
             <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name</Label>
+              <Label className="flex items-center gap-2">
+                <CalendarDays className="h-4 w-4" />
+                Member Since
+              </Label>
               <Input
-                id="lastName"
-                type="text"
-                value={user.lastName || ""}
+                value={formatDate(user.createdAt)}
                 disabled
                 className="bg-muted"
-                placeholder="Not provided"
               />
             </div>
 
             <Separator />
 
-            {/* Account Details */}
+            {/* Account Status */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">Account Details</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    User ID
-                  </Label>
-                  <Input
-                    value={user.id || ""}
-                    disabled
-                    className="bg-muted font-mono text-sm"
-                  />
+              <h3 className="text-lg font-semibold">Account Status</h3>
+              <div className="grid gap-4">
+                <div className="flex justify-between items-center p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <span className="text-sm font-medium">Account Status</span>
+                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                    Active
+                  </span>
                 </div>
-
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4" />
-                    Member Since
-                  </Label>
-                  <Input
-                    value={formatDate(user.createdAt)}
-                    disabled
-                    className="bg-muted"
-                  />
+                <div className="flex justify-between items-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <span className="text-sm font-medium">Email Verified</span>
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                    Verified
+                  </span>
                 </div>
               </div>
             </div>
@@ -190,5 +157,13 @@ export default function ProfilePage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <AuthGuard>
+      <ProfileContent />
+    </AuthGuard>
   );
 }

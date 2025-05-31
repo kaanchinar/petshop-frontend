@@ -35,12 +35,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { data: userData, isLoading, error, refetch } = useGetApiAuthMe({
     query: {
       enabled: shouldFetchUser, // Only run query when not on auth pages
-      retry: false, // Don't retry on 401 errors
-      staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-      refetchOnWindowFocus: false, // Prevent refetch on window focus
-      refetchOnMount: shouldFetchUser, // Only refetch on mount if enabled
+      retry: 1, // Try once on error
+      staleTime: 0, // Always check for fresh data
+      refetchOnWindowFocus: true, // Refetch when window gains focus
+      refetchOnMount: true, // Always refetch on mount
       refetchInterval: false, // Disable periodic refetching
     }
+  });
+
+  // Debug logging
+  console.log('Auth Context Debug:', {
+    pathname,
+    shouldFetchUser,
+    userData,
+    isLoading,
+    error,
+    user,
+    isAuthenticated: !!user && !error
   });
 
   const isAuthenticated = !!user && !error;

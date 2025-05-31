@@ -13,7 +13,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, viewMode = "grid" }: ProductCardProps) { // Default to grid if not provided
-  const { addItem } = useCart();
+  const { addItem, isAdding } = useCart();
 
   if (viewMode === "list") {
     return (
@@ -80,9 +80,15 @@ export default function ProductCard({ product, viewMode = "grid" }: ProductCardP
                 <span className="font-bold text-lg mr-4">${product.price.toFixed(2)}</span>
               )}
             </div>
-            <Button size="sm" variant="default" className="rounded-md whitespace-nowrap" onClick={() => addItem(product)}>
+            <Button 
+              size="sm" 
+              variant="default" 
+              className="rounded-md whitespace-nowrap" 
+              onClick={() => addItem(product)}
+              disabled={isAdding}
+            >
               <ShoppingCart className="h-4 w-4 mr-2" />
-              Add to Cart
+              {isAdding ? "Adding..." : "Add to Cart"}
             </Button>
           </div>
         </div>
@@ -144,9 +150,15 @@ export default function ProductCard({ product, viewMode = "grid" }: ProductCardP
             </div>
             <span className="text-xs text-muted-foreground ml-1">({product.reviewCount})</span>
           </div>
-          <Button size="sm" variant="ghost" className="rounded-full" onClick={() => addItem(product)}>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="rounded-full" 
+            onClick={() => addItem(product)}
+            disabled={isAdding}
+          >
             <ShoppingCart className="h-4 w-4" />
-            <span className="sr-only">Add to cart</span>
+            <span className="sr-only">{isAdding ? "Adding..." : "Add to cart"}</span>
           </Button>
         </div>
       </div>

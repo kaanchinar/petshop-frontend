@@ -146,6 +146,11 @@ export interface DashboardStatsDtoApiResponse {
   errors?: string[] | null;
 }
 
+export interface GoogleTokenDto {
+  /** @nullable */
+  idToken?: string | null;
+}
+
 export interface LoginDto {
   /** @nullable */
   email?: string | null;
@@ -371,6 +376,16 @@ export interface RegisterDto {
   lastName?: string | null;
 }
 
+export interface StringApiResponse {
+  success?: boolean;
+  /** @nullable */
+  message?: string | null;
+  /** @nullable */
+  data?: string | null;
+  /** @nullable */
+  errors?: string[] | null;
+}
+
 export interface UpdateCartItemDto {
   /**
    * @minimum 1
@@ -422,6 +437,15 @@ export interface UserDtoApiResponse {
   /** @nullable */
   errors?: string[] | null;
 }
+
+export type GetApiAuthGoogleUrlParams = {
+state?: string;
+};
+
+export type GetApiAuthGoogleCallbackParams = {
+code?: string;
+state?: string;
+};
 
 export type GetApiOrdersParams = {
 Status?: OrderStatus;

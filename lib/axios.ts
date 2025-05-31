@@ -25,9 +25,18 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Only redirect to login if we're not already on the sign-in page
-      if (typeof window !== "undefined" && window.location.pathname !== "/sign-in") {
-        window.location.href = "/sign-in";
+      // Only redirect to login for protected routes that require authentication
+      // Don't redirect if we're already on auth pages or for optional auth checks
+      if (typeof window !== "undefined") {
+        const currentPath = window.location.pathname;
+        const protectedPaths = ['/admin', '/profile', '/orders', '/checkout'];
+        const isAuthPage = ['/sign-in', '/sign-up'].includes(currentPath);
+        const isProtectedPath = protectedPaths.some(path => currentPath.startsWith(path));
+        
+        // Only redirect if we're on a protected path and not already on an auth page
+        if (isProtectedPath && !isAuthPage) {
+          window.location.href = "/sign-in";
+        }
       }
     }
     return Promise.reject(error);
