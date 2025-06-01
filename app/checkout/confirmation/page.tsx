@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { CheckCircle } from "lucide-react"
@@ -10,22 +10,28 @@ import { useCheckout } from "@/context/checkout-context"
 export default function ConfirmationPage() {
   const { clearCart } = useCart()
   const { resetCheckout } = useCheckout()
-
-  // Generate a random order number
-  const orderNumber = Math.floor(100000000 + Math.random() * 900000000)
+  const [orderNumber, setOrderNumber] = useState<string>("")
+  const [hasCleared, setHasCleared] = useState(false)
 
   // Clear cart and checkout info after order is placed
   useEffect(() => {
-    // Use a flag to ensure this only runs once
-    const isFirstRender = true
+    // Get the real order ID from session storage
+    const realOrderId = sessionStorage.getItem('recentOrderId')
+    if (realOrderId) {
+      setOrderNumber(realOrderId)
+      sessionStorage.removeItem('recentOrderId')
+    } else {
+      // Fallback to random number if no real order ID
+      setOrderNumber(Math.floor(100000000 + Math.random() * 900000000).toString())
+    }
 
-    if (isFirstRender) {
+    // Clear cart and checkout info only once
+    if (!hasCleared) {
+      setHasCleared(true)
       clearCart()
       resetCheckout()
     }
-
-    // Empty dependency array ensures this effect runs only once
-  }, [])
+  }, [clearCart, resetCheckout, hasCleared])
 
   return (
     <div className="max-w-2xl mx-auto text-center py-12">

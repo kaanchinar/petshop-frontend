@@ -71,12 +71,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     
     try {
       setIsAdding(true);
-      const addToCartDto: AddToCartDto = {
-        productId: parseInt(product.id),
-        quantity: 1,
-      };
       
-      await addToCartMutation.mutateAsync({ data: addToCartDto });
+      // Check if product already exists in cart
+      const existingItem = items.find(item => item.id === product.id);
+      
+      if (existingItem && existingItem.cartItemId) {
+        // Product exists, update quantity by incrementing by 1
+        const newQuantity = existingItem.quantity + 1;
+        const updateDto: UpdateCartItemDto = { quantity: newQuantity };
+        await updateCartItemMutation.mutateAsync({ 
+          cartItemId: existingItem.cartItemId, 
+          data: updateDto 
+        });
+      } else {
+        // Product doesn't exist, add new item
+        const addToCartDto: AddToCartDto = {
+          productId: parseInt(product.id),
+          quantity: 1,
+        };
+        await addToCartMutation.mutateAsync({ data: addToCartDto });
+      }
+      
       refetch(); // Refresh cart data
       setIsOpen(true);
     } catch (error) {
@@ -84,7 +99,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsAdding(false);
     }
-  }, [addToCartMutation, refetch, isAdding]);
+  }, [addToCartMutation, updateCartItemMutation, refetch, isAdding, items]);
 
   const removeItem = useCallback(async (productId: string) => {
     try {

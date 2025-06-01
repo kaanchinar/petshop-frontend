@@ -25,17 +25,23 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Only redirect to login for protected routes that require authentication
-      // Don't redirect if we're already on auth pages or for optional auth checks
-      if (typeof window !== "undefined") {
-        const currentPath = window.location.pathname;
-        const protectedPaths = ['/admin', '/profile', '/orders', '/checkout'];
-        const isAuthPage = ['/sign-in', '/sign-up'].includes(currentPath);
-        const isProtectedPath = protectedPaths.some(path => currentPath.startsWith(path));
-        
-        // Only redirect if we're on a protected path and not already on an auth page
-        if (isProtectedPath && !isAuthPage) {
-          window.location.href = "/sign-in";
+      // Only redirect to login for routes that require immediate authentication
+      // Don't redirect if we're already on auth pages or for routes that handle auth gracefully
+      if (typeof window !== "undefined" && window.location) {
+        try {
+          const currentPath = window.location.pathname;
+          // Only redirect for admin routes and checkout - other routes handle auth gracefully
+          const forceRedirectPaths = ['/admin', '/checkout'];
+          const isAuthPage = ['/sign-in', '/sign-up'].includes(currentPath);
+          const isForceRedirectPath = forceRedirectPaths.some(path => currentPath.startsWith(path));
+          
+          // Only redirect if we're on a path that requires immediate auth and not already on an auth page
+          if (isForceRedirectPath && !isAuthPage) {
+            window.location.href = "/sign-in";
+          }
+        } catch (e) {
+          // Silently ignore location access errors during SSR
+          console.warn('Location access error during SSR:', e);
         }
       }
     }

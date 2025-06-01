@@ -30,27 +30,16 @@ import {
 import { CalendarDays, Package, Search, Eye } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
-import { redirect } from "next/navigation";
 
 export default function OrdersPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Redirect to sign-in if not authenticated
-  if (!authLoading && !isAuthenticated) {
-    redirect("/sign-in");
-  }
-
   const { data: ordersData, isLoading, error } = useGetApiOrdersMyOrders(
     {
       Page: page,
       PageSize: pageSize,
-    },
-    {
-      query: {
-        enabled: isAuthenticated, // Only fetch if authenticated
-      },
     }
   );
 
@@ -90,6 +79,7 @@ export default function OrdersPage() {
     }).format(amount);
   };
 
+  // Show loading while auth is being determined
   if (authLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -98,6 +88,38 @@ export default function OrdersPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-lg text-muted-foreground">Loading...</p>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show sign-in prompt for unauthenticated users
+  if (!isAuthenticated) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <CardTitle>Sign In Required</CardTitle>
+              <CardDescription>
+                You need to be signed in to view your orders.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center">
+              <div className="space-y-4">
+                <Button asChild className="w-full">
+                  <Link href="/sign-in">Sign In</Link>
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  Don't have an account?{" "}
+                  <Link href="/sign-up" className="text-primary hover:underline">
+                    Sign up here
+                  </Link>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useGetApiAuthGoogleCallback } from '@/lib/api/auth/auth';
 import { useAuth } from '@/context/auth-context';
+import { Loader2 } from 'lucide-react';
 
-export default function GoogleCallbackPage() {
+function GoogleCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, refetchUser } = useAuth();
@@ -75,5 +76,25 @@ export default function GoogleCallbackPage() {
         <p className="text-muted-foreground">Redirecting you...</p>
       </div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+        <h1 className="text-2xl font-bold mb-2">Loading</h1>
+        <p className="text-muted-foreground">Please wait...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function GoogleCallbackPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <GoogleCallbackContent />
+    </Suspense>
   );
 }

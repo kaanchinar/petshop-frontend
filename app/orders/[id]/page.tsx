@@ -3,7 +3,6 @@
 import React from "react";
 import { useGetApiOrdersId } from "@/lib/api/orders/orders";
 import { useAuth } from "@/context/auth-context";
-import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -38,7 +37,7 @@ interface OrderDetailsPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
+function OrderDetailsPageContent({ params }: OrderDetailsPageProps) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   
   // Handle async params
@@ -48,9 +47,64 @@ export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
     params.then(setResolvedParams);
   }, [params]);
 
-  // Redirect to sign-in if not authenticated
-  if (!authLoading && !isAuthenticated) {
-    redirect("/sign-in");
+  // Always call hooks in the same order - use a default orderId that won't cause issues
+  const orderId = resolvedParams ? parseInt(resolvedParams.id) : 0;
+  
+  // Always call the hook, but skip the query if we don't have a valid orderId or not authenticated
+  const { data: orderData, isLoading, error } = useGetApiOrdersId(orderId, {
+    query: {
+      enabled: !!resolvedParams && orderId > 0 && isAuthenticated, // Only enable when authenticated
+    },
+  });
+
+  // Show loading while auth is being determined
+  if (authLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-lg text-muted-foreground">Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show sign-in prompt for unauthenticated users
+  if (!isAuthenticated) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <Card className="w-full max-w-md">
+              <CardHeader className="text-center">
+                <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <CardTitle>Sign In Required</CardTitle>
+                <CardDescription>
+                  You need to be signed in to view order details.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center">
+                <div className="space-y-4">
+                  <Button asChild className="w-full">
+                    <Link href="/sign-in">Sign In</Link>
+                  </Button>
+                  <p className="text-sm text-muted-foreground">
+                    Don't have an account?{" "}
+                    <Link href="/sign-up" className="text-primary hover:underline">
+                      Sign up here
+                    </Link>
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Wait for params to resolve
@@ -66,9 +120,6 @@ export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
       </div>
     );
   }
-
-  const orderId = parseInt(resolvedParams.id);
-  const { data: orderData, isLoading, error } = useGetApiOrdersId(orderId);
 
   if (isLoading) {
     return (
@@ -313,4 +364,8 @@ export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
       </div>
     </div>
   );
+}
+
+export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
+  return <OrderDetailsPageContent params={params} />;
 }

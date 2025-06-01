@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, Filter, Eye, Package, Truck, CheckCircle, XCircle, Clock } from "lucide-react";
@@ -47,19 +48,34 @@ export default function AdminOrdersPage() {
   const searchParams = useSearchParams();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">(
-    (searchParams.get("status") as OrderStatus) || "all"
-  );
+  const [activeTab, setActiveTab] = useState("pending");
 
-  const { data: ordersData, isLoading, error } = useGetApiOrders({
+  // Fetch pending orders (Waiting + InProcessing)
+  const { data: pendingOrdersData, isLoading: pendingLoading } = useGetApiOrders({
     Page: currentPage,
     PageSize: 20,
-    Status: (statusFilter !== "all" ? statusFilter as OrderStatus : undefined),
+    Status: activeTab === "pending" ? undefined : undefined, // We'll filter client-side
   });
 
-  const orders = ordersData?.data?.items || [];
+  // Fetch completed orders
+  const { data: completedOrdersData, isLoading: completedLoading } = useGetApiOrders({
+    Page: currentPage,
+    PageSize: 20,
+    Status: "Completed",
+  });
+
+  // Get appropriate data based on active tab
+  const ordersData = activeTab === "pending" ? pendingOrdersData : completedOrdersData;
+  const isLoading = activeTab === "pending" ? pendingLoading : completedLoading;
   
-  // Filter orders by search query on the frontend since API doesn't support search
+  const allOrders = ordersData?.data?.items || [];
+  
+  // Filter orders based on tab
+  const orders = activeTab === "pending" 
+    ? allOrders.filter(order => order.status === 'Waiting' || order.status === 'InProcessing')
+    : allOrders;
+  
+  // Filter orders by search query
   const filteredOrders = orders.filter(order => {
     if (!searchQuery) return true;
     const searchLower = searchQuery.toLowerCase();
@@ -72,6 +88,15 @@ export default function AdminOrdersPage() {
   
   const totalCount = ordersData?.data?.totalCount || 0;
   const totalPages = ordersData?.data?.totalPages || 1;
+
+  // Get counts for tabs
+  const pendingCount = pendingOrdersData?.data?.items?.filter(order => 
+    order.status === 'Waiting' || order.status === 'InProcessing'
+  ).length || 0;
+  
+  const completedCount = completedOrdersData?.data?.items?.filter(order => 
+    order.status === 'Completed'
+  ).length || 0;
 
   if (isLoading) {
     return (
@@ -89,22 +114,6 @@ export default function AdminOrdersPage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">Orders Management</h1>
-        </div>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <p className="text-lg text-destructive mb-4">Failed to load orders</p>
-            <Button onClick={() => window.location.reload()}>Try Again</Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -112,52 +121,37 @@ export default function AdminOrdersPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalCount}</div>
+            <div className="text-2xl font-bold">{pendingCount + completedCount}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
-            <Package className="h-4 w-4 text-yellow-600" />
+            <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
+            <Clock className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {orders.filter(order => order.status === 'Waiting').length}
-            </div>
+            <div className="text-2xl font-bold">{pendingCount}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Processing</CardTitle>
-            <Truck className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {orders.filter(order => order.status === 'InProcessing').length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+            <CardTitle className="text-sm font-medium">Completed Orders</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {orders.filter(order => order.status === 'Completed').length}
-            </div>
+            <div className="text-2xl font-bold">{completedCount}</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
+      {/* Search Bar */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -169,100 +163,29 @@ export default function AdminOrdersPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <Select 
-          value={statusFilter} 
-          onValueChange={(value) => setStatusFilter(value as OrderStatus | "all")}
-        >
-          <SelectTrigger className="w-[180px]">
-            <Filter className="mr-2 h-4 w-4" />
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="Waiting">Waiting</SelectItem>
-            <SelectItem value="InProcessing">In Processing</SelectItem>
-            <SelectItem value="Completed">Completed</SelectItem>
-            <SelectItem value="Withdrawn">Withdrawn</SelectItem>
-            <SelectItem value="Rejected">Rejected</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
-      {/* Orders Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOrders.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
-                    <div className="text-muted-foreground">
-                      <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p>No orders found</p>
-                      {(searchQuery || statusFilter !== "all") && (
-                        <p className="text-sm mt-1">Try adjusting your filters</p>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">
-                      #{order.id?.toString().padStart(6, '0')}
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{order.userId || 'N/A'}</div>
-                        <div className="text-sm text-muted-foreground">{order.orderNumber || 'N/A'}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {order.createdAt ? format(new Date(order.createdAt), 'MMM dd, yyyy') : 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      ${order.totalAmount?.toFixed(2) || '0.00'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className={statusColors[order.status as keyof typeof statusColors] || statusColors.Waiting}
-                      >
-                        <span className="flex items-center gap-1">
-                          {statusIcons[order.status as keyof typeof statusIcons]}
-                          {order.status}
-                        </span>
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {order.orderItems?.length || 0} items
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/admin/orders/${order.id}`}>
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="pending" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Pending Orders ({pendingCount})
+          </TabsTrigger>
+          <TabsTrigger value="completed" className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4" />
+            Completed Orders ({completedCount})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="pending" className="space-y-4">
+          <OrdersTable orders={filteredOrders} searchQuery={searchQuery} />
+        </TabsContent>
+
+        <TabsContent value="completed" className="space-y-4">
+          <OrdersTable orders={filteredOrders} searchQuery={searchQuery} />
+        </TabsContent>
+      </Tabs>
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -294,5 +217,90 @@ export default function AdminOrdersPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// Separate component for the orders table
+interface OrdersTableProps {
+  orders: any[];
+  searchQuery: string;
+}
+
+function OrdersTable({ orders, searchQuery }: OrdersTableProps) {
+  return (
+    <Card>
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Order ID</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Total</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Items</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {orders.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8">
+                  <div className="text-muted-foreground">
+                    <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p>No orders found</p>
+                    {searchQuery && (
+                      <p className="text-sm mt-1">Try adjusting your search</p>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              orders.map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell className="font-medium">
+                    #{order.id?.toString().padStart(6, '0')}
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{order.userId || 'N/A'}</div>
+                      <div className="text-sm text-muted-foreground">{order.orderNumber || 'N/A'}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {order.createdAt ? format(new Date(order.createdAt), 'MMM dd, yyyy') : 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    ${order.totalAmount?.toFixed(2) || '0.00'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="secondary"
+                      className={statusColors[order.status as keyof typeof statusColors] || statusColors.Waiting}
+                    >
+                      <span className="flex items-center gap-1">
+                        {statusIcons[order.status as keyof typeof statusIcons]}
+                        {order.status}
+                      </span>
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {order.orderItems?.length || 0} items
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/admin/orders/${order.id}`}>
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }

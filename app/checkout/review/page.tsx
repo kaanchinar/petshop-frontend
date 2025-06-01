@@ -1,17 +1,23 @@
 "use client"
 
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import CheckoutProgress from "@/components/checkout/checkout-progress"
 import OrderSummary from "@/components/checkout/order-summary"
 import { useCheckout } from "@/context/checkout-context"
 import { useCart } from "@/context/cart-context"
-import { CreditCard, MapPin, Wallet } from "lucide-react"
+import { CreditCard, MapPin, Wallet, Loader2 } from "lucide-react"
+import { usePostApiOrders } from "@/lib/api/orders/orders"
+import type { CreateOrderDto } from "@/lib/api/petPetAPI.schemas"
 
 export default function ReviewPage() {
   const router = useRouter()
   const { shippingInfo, billingInfo, paymentInfo } = useCheckout()
   const { items } = useCart()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  const createOrderMutation = usePostApiOrders()
 
   // Ensure all required info is available
   if (!shippingInfo || !paymentInfo || items.length === 0) {
@@ -19,10 +25,36 @@ export default function ReviewPage() {
     return null
   }
 
-  const handlePlaceOrder = () => {
-    // In a real app, this would submit the order to the backend
-    // For now, just navigate to the confirmation page
-    router.push("/checkout/confirmation")
+  const handlePlaceOrder = async () => {
+    setIsSubmitting(true)
+    
+    try {
+      // Create the order DTO
+      const orderData: CreateOrderDto = {
+        shippingAddress: `${shippingInfo.firstName} ${shippingInfo.lastName}\n${shippingInfo.address}\n${shippingInfo.city}, ${shippingInfo.state} ${shippingInfo.zipCode}\n${shippingInfo.country}`,
+        notes: `Payment Method: ${paymentInfo.paymentMethod}${paymentInfo.paymentMethod === 'credit-card' ? ` (****${paymentInfo.cardNumber?.slice(-4)})` : ''}`
+      }
+
+      console.log('Creating order with data:', orderData)
+      
+      // Create the order
+      const response = await createOrderMutation.mutateAsync({ data: orderData })
+      
+      console.log('Order created successfully:', response)
+      
+      // Store the real order ID for confirmation page
+      sessionStorage.setItem('recentOrderId', response.data?.id?.toString() || '')
+      
+      // Navigate to confirmation
+      router.push("/checkout/confirmation")
+      
+    } catch (error) {
+      console.error('Failed to create order:', error)
+      // TODO: Show error message to user
+      alert('Failed to create order. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -130,10 +162,19 @@ export default function ReviewPage() {
             </div>
 
             <div className="flex justify-between pt-4">
-              <Button type="button" variant="outline" onClick={() => router.push("/checkout/payment")}>
+              <Button type="button" variant="outline" onClick={() => router.push("/checkout/payment")} disabled={isSubmitting}>
                 Back
               </Button>
-              <Button onClick={handlePlaceOrder}>Place Order</Button>
+              <Button onClick={handlePlaceOrder} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Order...
+                  </>
+                ) : (
+                  'Place Order'
+                )}
+              </Button>
             </div>
           </div>
         </div>

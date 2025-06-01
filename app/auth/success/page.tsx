@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export default function AuthSuccessPage() {
+function AuthSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isProcessing, setIsProcessing] = useState(true);
@@ -131,5 +131,31 @@ export default function AuthSuccessPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full mb-4">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          </div>
+          <CardTitle className="text-2xl font-bold">Loading...</CardTitle>
+          <CardDescription>
+            Please wait while we process your authentication
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    </div>
+  );
+}
+
+export default function AuthSuccessPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <AuthSuccessContent />
+    </Suspense>
   );
 }

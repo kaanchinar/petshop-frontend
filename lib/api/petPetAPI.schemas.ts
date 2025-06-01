@@ -128,6 +128,27 @@ export interface CreateProductImageDto {
   isPrimary?: boolean;
 }
 
+export interface CreateReviewDto {
+  productId: number;
+  orderId: number;
+  /**
+   * @minimum 1
+   * @maximum 5
+   */
+  rating: number;
+  /**
+   * @minLength 0
+   * @maxLength 1000
+   */
+  comment: string;
+  /**
+   * @minLength 0
+   * @maxLength 100
+   * @nullable
+   */
+  title?: string | null;
+}
+
 export interface DashboardStatsDto {
   totalProducts?: number;
   inventoryValue?: number;
@@ -299,6 +320,8 @@ export interface ProductDto {
   updatedAt?: string | null;
   /** @nullable */
   images?: ProductImageDto[] | null;
+  reviewCount?: number;
+  averageRating?: number;
 }
 
 export interface ProductDtoApiResponse {
@@ -350,6 +373,19 @@ export interface ProductImageDto {
   isPrimary?: boolean;
 }
 
+/**
+ * @nullable
+ */
+export type ProductReviewSummaryDtoRatingDistribution = {[key: string]: number} | null;
+
+export interface ProductReviewSummaryDto {
+  productId?: number;
+  averageRating?: number;
+  totalReviews?: number;
+  /** @nullable */
+  ratingDistribution?: ProductReviewSummaryDtoRatingDistribution;
+}
+
 export type ProductState = typeof ProductState[keyof typeof ProductState];
 
 
@@ -374,6 +410,36 @@ export interface RegisterDto {
   firstName?: string | null;
   /** @nullable */
   lastName?: string | null;
+}
+
+export interface ReviewDto {
+  id?: number;
+  /** @nullable */
+  userId?: string | null;
+  /** @nullable */
+  userName?: string | null;
+  productId?: number;
+  /** @nullable */
+  productName?: string | null;
+  orderId?: number;
+  rating?: number;
+  /** @nullable */
+  comment?: string | null;
+  /** @nullable */
+  title?: string | null;
+  createdAt?: string;
+  /** @nullable */
+  updatedAt?: string | null;
+  isVerifiedPurchase?: boolean;
+  helpfulVotes?: number;
+  unhelpfulVotes?: number;
+  /** @nullable */
+  userHelpfulnessVote?: boolean | null;
+}
+
+export interface ReviewHelpfulnessDto {
+  reviewId: number;
+  isHelpful: boolean;
 }
 
 export interface StringApiResponse {
@@ -415,6 +481,27 @@ export interface UpdateProductDto {
   state?: ProductState;
   /** @nullable */
   images?: CreateProductImageDto[] | null;
+}
+
+export interface UpdateReviewDto {
+  /**
+   * @minimum 1
+   * @maximum 5
+   * @nullable
+   */
+  rating?: number | null;
+  /**
+   * @minLength 0
+   * @maxLength 1000
+   * @nullable
+   */
+  comment?: string | null;
+  /**
+   * @minLength 0
+   * @maxLength 100
+   * @nullable
+   */
+  title?: string | null;
 }
 
 export interface UserDto {
@@ -473,5 +560,10 @@ State?: ProductState;
 Page?: number;
 PageSize?: number;
 SearchTerm?: string;
+};
+
+export type GetApiReviewsCanReviewParams = {
+productId?: number;
+orderId?: number;
 };
 
