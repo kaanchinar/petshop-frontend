@@ -27,15 +27,10 @@ const productSchema = z.object({
     .max(100, { message: "Discount cannot exceed 100%" }),
   category: z.string({ required_error: "Please select a category" }).min(1, { message: "Category is required"}), // Ensured non-empty
   brand: z.string().min(1, { message: "Brand is required" }),
-  rating: z.coerce
-    .number()
-    .min(0, { message: "Rating cannot be negative" })
-    .max(5, { message: "Rating cannot exceed 5" }),
   reviewCount: z.coerce.number().int().nonnegative({ message: "Review count cannot be negative" }),
   inStock: z.boolean(), // Removed .default(true)
   isNew: z.boolean(),   // Removed .default(false)
   image: z.string({ required_error: "Image URL is required" }).min(1, {message: "Image URL cannot be empty"}),
-  tags: z.array(z.string()), // Removed .default([])
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -43,21 +38,20 @@ type ProductFormValues = z.infer<typeof productSchema>;
 interface ProductFormProps {
   initialData?: Product
   onSubmit: (data: Omit<Product, "id">) => void
+  onCancel?: () => void
   isSubmitting?: boolean; // Added isSubmitting prop
 }
 
-export default function ProductForm({ initialData, onSubmit, isSubmitting }: ProductFormProps) { // Added isSubmitting to destructuring
-  const [tags, setTags] = useState<string[]>(initialData?.tags || [])
-  const [tagInput, setTagInput] = useState("")
+export default function ProductForm({ initialData, onSubmit, onCancel, isSubmitting }: ProductFormProps) {
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: initialData
       ? {
-          ...initialData, // initialData is Product, which includes all fields
+          ...initialData,
           image: initialData.image || "/placeholder.svg?height=300&width=300", 
         }
-      : { // Ensure all fields in ProductFormValues are initialized
+      : {
           name: "",
           description: "",
           price: 0,
@@ -65,35 +59,21 @@ export default function ProductForm({ initialData, onSubmit, isSubmitting }: Pro
           discount: 0,
           category: "",
           brand: "",
-          rating: 0,
           reviewCount: 0,
-          inStock: true, // Required, so provide default
-          isNew: false,  // Required, so provide default
+          inStock: true,
+          isNew: false,
           image: "/placeholder.svg?height=300&width=300",
-          tags: [],      // Required, so provide default
         },
   })
 
-  const handleAddTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      const newTags = [...tags, tagInput.trim()]
-      setTags(newTags)
-      form.setValue("tags", newTags)
-      setTagInput("")
-    }
-  }
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    const newTags = tags.filter((tag) => tag !== tagToRemove)
-    setTags(newTags)
-    form.setValue("tags", newTags)
-  }
-
   const handleSubmit = (values: ProductFormValues) => {
-    // ProductFormValues should now be compatible with Omit<Product, "id">
-    // as productSchema matches those fields.
-    // The 'tags' in 'values' should be up-to-date due to form.setValue("tags", newTags).
-    onSubmit(values);
+    // Add rating and tags for compatibility with Product type
+    const productData = {
+      ...values,
+      rating: 0, // New products start with 0 rating
+      tags: [] // Empty tags array for new products
+    };
+    onSubmit(productData);
   }
 
   return (
@@ -253,20 +233,6 @@ export default function ProductForm({ initialData, onSubmit, isSubmitting }: Pro
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="rating"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Rating (0-5)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.1" min="0" max="5" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
                 name="reviewCount"
                 render={({ field }) => (
                   <FormItem>
@@ -313,51 +279,36 @@ export default function ProductForm({ initialData, onSubmit, isSubmitting }: Pro
                 )}
               />
             </div>
-
-            <div>
-              <FormLabel>Tags</FormLabel>
-              <div className="flex flex-wrap gap-2 mt-2 mb-4">
-                {tags.map((tag, index) => (
-                  <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                    {tag}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-4 w-4 rounded-full"
-                      onClick={() => handleRemoveTag(tag)}
-                    >
-                      <X className="h-3 w-3" />
-                      <span className="sr-only">Remove {tag}</span>
-                    </Button>
-                  </Badge>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add a tag"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault()
-                      handleAddTag()
-                    }
-                  }}
-                />
-                <Button type="button" variant="outline" onClick={handleAddTag}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add
-                </Button>
-              </div>
-            </div>
           </div>
         </div>
 
         <Separator />
 
         <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" disabled={isSubmitting} onClick={() => form.reset(initialData || { name: "", description: "", price: 0, originalPrice: 0, discount: 0, category: "", brand: "", rating: 0, reviewCount: 0, inStock: true, isNew: false, image: "/placeholder.svg?height=300&width=300", tags: [] } )}>
+          <Button 
+            type="button" 
+            variant="outline" 
+            disabled={isSubmitting} 
+            onClick={() => {
+              if (onCancel) {
+                onCancel();
+              } else {
+                form.reset(initialData || { 
+                  name: "", 
+                  description: "", 
+                  price: 0, 
+                  originalPrice: 0, 
+                  discount: 0, 
+                  category: "", 
+                  brand: "", 
+                  reviewCount: 0, 
+                  inStock: true, 
+                  isNew: false, 
+                  image: "/placeholder.svg?height=300&width=300" 
+                });
+              }
+            }}
+          >
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>

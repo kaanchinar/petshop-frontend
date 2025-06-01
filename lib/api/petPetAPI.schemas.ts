@@ -14,6 +14,51 @@ export interface AddToCartDto {
   quantity: number;
 }
 
+export interface AdminReviewActionDto {
+  reviewId: number;
+  /** @minLength 1 */
+  action: string;
+  /** @nullable */
+  reason?: string | null;
+}
+
+export interface AdminReviewDto {
+  id?: number;
+  /** @nullable */
+  userId?: string | null;
+  /** @nullable */
+  userName?: string | null;
+  /** @nullable */
+  userEmail?: string | null;
+  productId?: number;
+  /** @nullable */
+  productName?: string | null;
+  orderId?: number;
+  rating?: number;
+  /** @nullable */
+  comment?: string | null;
+  /** @nullable */
+  title?: string | null;
+  createdAt?: string;
+  /** @nullable */
+  updatedAt?: string | null;
+  isVerifiedPurchase?: boolean;
+  isApproved?: boolean;
+  helpfulVotes?: number;
+  unhelpfulVotes?: number;
+  /** @nullable */
+  status?: string | null;
+}
+
+export interface AdminReviewDtoApiResponse {
+  success?: boolean;
+  /** @nullable */
+  message?: string | null;
+  data?: AdminReviewDto;
+  /** @nullable */
+  errors?: string[] | null;
+}
+
 export type AnimalSection = typeof AnimalSection[keyof typeof AnimalSection];
 
 
@@ -49,6 +94,14 @@ export interface BooleanApiResponse {
   data?: boolean;
   /** @nullable */
   errors?: string[] | null;
+}
+
+export interface BulkReviewActionDto {
+  reviewIds: number[];
+  /** @minLength 1 */
+  action: string;
+  /** @nullable */
+  reason?: string | null;
 }
 
 export interface CartItemDto {
@@ -287,6 +340,24 @@ export const OrderStatus = {
   Rejected: 'Rejected',
 } as const;
 
+export interface PagedReviewsDto {
+  /** @nullable */
+  reviews?: AdminReviewDto[] | null;
+  totalCount?: number;
+  page?: number;
+  pageSize?: number;
+  totalPages?: number;
+}
+
+export interface PagedReviewsDtoApiResponse {
+  success?: boolean;
+  /** @nullable */
+  message?: string | null;
+  data?: PagedReviewsDto;
+  /** @nullable */
+  errors?: string[] | null;
+}
+
 export type ProductCategory = typeof ProductCategory[keyof typeof ProductCategory];
 
 
@@ -438,8 +509,39 @@ export interface ReviewDto {
 }
 
 export interface ReviewHelpfulnessDto {
+  /**
+   * @minimum 1
+   * @maximum 2147483647
+   */
   reviewId: number;
   isHelpful: boolean;
+}
+
+/**
+ * @nullable
+ */
+export type ReviewStatsDtoRatingDistribution = {[key: string]: number} | null;
+
+export interface ReviewStatsDto {
+  totalReviews?: number;
+  pendingReviews?: number;
+  approvedReviews?: number;
+  rejectedReviews?: number;
+  averageRating?: number;
+  reviewsToday?: number;
+  reviewsThisWeek?: number;
+  reviewsThisMonth?: number;
+  /** @nullable */
+  ratingDistribution?: ReviewStatsDtoRatingDistribution;
+}
+
+export interface ReviewStatsDtoApiResponse {
+  success?: boolean;
+  /** @nullable */
+  message?: string | null;
+  data?: ReviewStatsDto;
+  /** @nullable */
+  errors?: string[] | null;
 }
 
 export interface StringApiResponse {
@@ -524,6 +626,21 @@ export interface UserDtoApiResponse {
   /** @nullable */
   errors?: string[] | null;
 }
+
+export type GetApiAdminReviewsParams = {
+SearchTerm?: string;
+ProductId?: number;
+UserId?: string;
+IsApproved?: boolean;
+MinRating?: number;
+MaxRating?: number;
+FromDate?: string;
+ToDate?: string;
+SortBy?: string;
+SortDirection?: string;
+Page?: number;
+PageSize?: number;
+};
 
 export type GetApiAuthGoogleUrlParams = {
 state?: string;

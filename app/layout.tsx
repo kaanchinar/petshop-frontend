@@ -8,6 +8,7 @@ import { CartProvider } from "@/context/cart-context"
 import { CheckoutProvider } from "@/context/checkout-context"
 import { AuthProvider } from "@/context/auth-context"
 import { QueryProvider } from "@/components/providers"
+import { Toaster } from "sonner"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -34,6 +35,7 @@ export default function RootLayout({
                   <main className="flex-grow">{children}</main>
                   <Footer />
                 </div>
+                <Toaster position="top-right" />
               </CheckoutProvider>
             </CartProvider>
           </AuthProvider>

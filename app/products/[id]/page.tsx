@@ -11,6 +11,7 @@ import { useGetApiProductsId } from "@/lib/api/products/products";
 import { productDtoToProduct } from "@/lib/api-types";
 import { useCart } from "@/context/cart-context";
 import { ShoppingCart, ArrowLeft, Star, Truck, Shield, RotateCcw } from "lucide-react";
+import ProductReviews from "@/components/reviews/product-reviews";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -97,22 +98,8 @@ export default function ProductDetailPage() {
           {/* Header */}
           <div>
             <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-            <p className="text-lg text-muted-foreground mb-4">{product.brand}</p>
-            
-            {/* Rating */}
-            <div className="flex items-center gap-2 mb-4">
-              <div className="flex">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className={`w-5 h-5 ${
-                      star <= product.rating 
-                        ? "text-yellow-400 fill-current" 
-                        : "text-gray-300"
-                    }`}
-                  />
-                ))}
-              </div>
+            <div className="flex items-center gap-4 mb-4">
+              <p className="text-lg text-muted-foreground">{product.brand}</p>
               <span className="text-sm text-muted-foreground">
                 ({product.reviewCount} reviews)
               </span>
@@ -208,6 +195,11 @@ export default function ProductDetailPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Reviews Section */}
+      <div className="mt-12">
+        <ProductReviews productId={parseInt(productId)} />
       </div>
     </div>
   );

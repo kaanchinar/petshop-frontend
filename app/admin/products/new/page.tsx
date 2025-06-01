@@ -15,9 +15,11 @@ import { usePostApiProducts } from "@/lib/api/products/products";
 import { productToCreateProductDto } from "@/lib/api-types";
 import type { Product } from "@/lib/types";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function NewProductPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   
   const createProductMutation = usePostApiProducts();
@@ -27,6 +29,9 @@ export default function NewProductPage() {
     try {
       const createDto = productToCreateProductDto(productData);
       await createProductMutation.mutateAsync({ data: createDto });
+      
+      // Invalidate and refetch products cache
+      await queryClient.invalidateQueries({ queryKey: ['getApiProducts'] });
       router.push("/admin/products");
     } catch (err) {
       console.error("Failed to create product:", err);
@@ -64,6 +69,7 @@ export default function NewProductPage() {
         <CardContent>
           <ProductForm 
             onSubmit={handleSubmit} 
+            onCancel={() => router.back()}
             isSubmitting={createProductMutation.isPending} 
           />
         </CardContent>

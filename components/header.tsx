@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ShoppingCart, Menu, X, Search, User, Package } from "lucide-react"
+import { ShoppingCart, Menu, X, Search, User, Package, Star } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useCart } from "@/context/cart-context"
 import { useAuth } from "@/context/auth-context"
@@ -113,6 +113,9 @@ export default function Header() {
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href="/orders">My Orders</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/profile/reviews">My Reviews</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={logout}>
@@ -228,6 +231,16 @@ export default function Header() {
                     >
                       <Package className="mr-2 h-5 w-5" />
                       My Orders
+                    </Link>
+                    <Link
+                      href="/profile/reviews"
+                      className={cn(
+                        "flex items-center rounded-md px-3 py-2 text-base font-medium hover:bg-accent hover:text-accent-foreground text-muted-foreground"
+                      )}
+                      onClick={closeMenu}
+                    >
+                      <Star className="mr-2 h-5 w-5" />
+                      My Reviews
                     </Link>
                     <button
                       onClick={() => {

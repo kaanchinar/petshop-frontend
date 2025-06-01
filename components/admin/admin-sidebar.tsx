@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  Star,
 } from "lucide-react"
 
 interface SidebarItem {
@@ -43,7 +44,6 @@ export default function AdminSidebar() {
       submenu: [
         { title: "All Products", href: "/admin/products" },
         { title: "Add Product", href: "/admin/products/new" },
-        { title: "Categories", href: "/admin/products/categories" },
       ],
     },
     {
@@ -57,10 +57,11 @@ export default function AdminSidebar() {
       ],
     },
     {
-      title: "Users",
-      icon: <Users className="h-5 w-5" />,
-      href: "/admin/users",
+      title: "Reviews",
+      icon: <Star className="h-5 w-5" />,
+      href: "/admin/reviews",
     },
+    
   ]
 
   return (

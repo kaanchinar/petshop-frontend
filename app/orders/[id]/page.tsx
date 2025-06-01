@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import ReviewButton from "@/components/reviews/review-button";
 
 interface OrderDetailsPageProps {
   params: Promise<{ id: string }>;
@@ -305,6 +306,16 @@ function OrderDetailsPageContent({ params }: OrderDetailsPageProps) {
                       <div className="text-right">
                         <p className="text-sm text-muted-foreground">Total</p>
                         <p className="font-medium">{formatCurrency(item.totalPrice)}</p>
+                      </div>
+                      
+                      {/* Review Button for Completed Orders */}
+                      <div className="flex flex-col items-end gap-2">
+                        <ReviewButton
+                          productId={item.productId || 0}
+                          orderId={order.id || 0}
+                          productName={item.productName || "Product"}
+                          orderStatus={order.status || ""}
+                        />
                       </div>
                     </div>
                   ))}

@@ -22,8 +22,8 @@ const shippingSchema = z.object({
   phone: z.string().min(10, { message: "Please enter a valid phone number" }),
   address: z.string().min(5, { message: "Address must be at least 5 characters" }),
   city: z.string().min(2, { message: "City must be at least 2 characters" }),
-  state: z.string().min(2, { message: "Please select a state" }),
-  zipCode: z.string().min(5, { message: "Please enter a valid ZIP code" }),
+  region: z.string().min(2, { message: "Please select a region" }),
+  postalCode: z.string().min(4, { message: "Please enter a valid postal code" }),
   country: z.string().min(2, { message: "Please select a country" }),
 })
 
@@ -41,9 +41,9 @@ export default function ShippingPage() {
       phone: "",
       address: "",
       city: "",
-      state: "",
-      zipCode: "",
-      country: "US",
+      region: "",
+      postalCode: "",
+      country: "AZ",
     },
   })
 
@@ -152,7 +152,7 @@ export default function ShippingPage() {
                       <FormItem>
                         <FormLabel>City</FormLabel>
                         <FormControl>
-                          <Input placeholder="New York" {...field} />
+                          <Input placeholder="Baku" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -161,25 +161,23 @@ export default function ShippingPage() {
 
                   <FormField
                     control={form.control}
-                    name="state"
+                    name="region"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>State</FormLabel>
+                        <FormLabel>Region</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select state" />
+                              <SelectValue placeholder="Select region" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="AL">Alabama</SelectItem>
-                            <SelectItem value="AK">Alaska</SelectItem>
-                            <SelectItem value="AZ">Arizona</SelectItem>
-                            <SelectItem value="CA">California</SelectItem>
-                            <SelectItem value="CO">Colorado</SelectItem>
-                            <SelectItem value="NY">New York</SelectItem>
-                            <SelectItem value="TX">Texas</SelectItem>
-                            {/* Add more states as needed */}
+                            <SelectItem value="Baku">Baku</SelectItem>
+                            <SelectItem value="Ganja">Ganja</SelectItem>
+                            <SelectItem value="Sumqayit">Sumqayit</SelectItem>
+                            <SelectItem value="Mingachevir">Mingachevir</SelectItem>
+                            <SelectItem value="Shaki">Shaki</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -189,12 +187,12 @@ export default function ShippingPage() {
 
                   <FormField
                     control={form.control}
-                    name="zipCode"
+                    name="postalCode"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>ZIP Code</FormLabel>
+                        <FormLabel>Postal Code</FormLabel>
                         <FormControl>
-                          <Input placeholder="10001" {...field} />
+                          <Input placeholder="AZ1000" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -215,11 +213,7 @@ export default function ShippingPage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="US">United States</SelectItem>
-                          <SelectItem value="CA">Canada</SelectItem>
-                          <SelectItem value="UK">United Kingdom</SelectItem>
-                          <SelectItem value="AU">Australia</SelectItem>
-                          {/* Add more countries as needed */}
+                          <SelectItem value="AZ">Azerbaijan</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

@@ -68,8 +68,8 @@ export function productDtoToProduct(dto: import("./api/petPetAPI.schemas").Produ
     image: primaryImage?.imageUrl || "/placeholder.svg",
     category: dto.section || "", // Use section for category filtering (Cats, Dogs, Other)
     brand: dto.brand || "",
-    rating: 4.5, // Default rating since it's not in the API
-    reviewCount: 0, // Default review count since it's not in the API
+    rating: dto.averageRating || 0, // Use actual average rating from API
+    reviewCount: dto.reviewCount || 0, // Use actual review count from API
     isNew: dto.state === "NewProduct",
     inStock: dto.stockQuantity ? dto.stockQuantity > 0 : false,
     tags: [], // Default empty tags since it's not in the API

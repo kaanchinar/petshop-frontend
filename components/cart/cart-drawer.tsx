@@ -66,7 +66,6 @@ export default function CartDrawer() {
               <Button className="w-full" asChild>
                 <Link href="/cart">View Cart</Link>
               </Button>
-              <Button className="w-full">Checkout</Button>
               <Button variant="outline" size="sm" className="mt-2" onClick={clearCart}>
                 Clear Cart
               </Button>

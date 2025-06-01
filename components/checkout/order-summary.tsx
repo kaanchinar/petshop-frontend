@@ -16,12 +16,8 @@ export default function OrderSummary({ showPlaceOrderButton = false }: OrderSumm
   // Calculate shipping cost (free over $50)
   const shippingCost = subtotal >= 50 ? 0 : 5.99
 
-  // Calculate tax (8.25%)
-  const taxRate = 0.0825
-  const taxAmount = subtotal * taxRate
-
-  // Calculate total
-  const total = subtotal + shippingCost + taxAmount
+  // No tax for Azerbaijan
+  const total = subtotal + shippingCost
 
   return (
     <Card>
@@ -54,10 +50,7 @@ export default function OrderSummary({ showPlaceOrderButton = false }: OrderSumm
               <span>${shippingCost.toFixed(2)}</span>
             )}
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Tax (8.25%)</span>
-            <span>${taxAmount.toFixed(2)}</span>
-          </div>
+          {/* No tax for Azerbaijan */}
           <div className="border-t pt-2 flex justify-between font-medium text-lg">
             <span>Total</span>
             <span>${total.toFixed(2)}</span>

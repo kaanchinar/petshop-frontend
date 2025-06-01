@@ -6,23 +6,34 @@
  * OpenAPI spec version: v1
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
+  AdminReviewActionDto,
+  AdminReviewDtoApiResponse,
+  BooleanApiResponse,
+  BulkReviewActionDto,
   DashboardStatsDtoApiResponse,
-  LowStockProductDtoListApiResponse
+  GetApiAdminReviewsParams,
+  LowStockProductDtoListApiResponse,
+  PagedReviewsDtoApiResponse,
+  ReviewStatsDtoApiResponse
 } from '../petPetAPI.schemas';
 
 import { customAxios } from '../../axios';
@@ -192,3 +203,364 @@ export function useGetApiAdminProductsLowStock<TData = Awaited<ReturnType<typeof
 
 
 
+export const getApiAdminReviews = (
+    params?: GetApiAdminReviewsParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxios<PagedReviewsDtoApiResponse>(
+      {url: `http://localhost:8080/api/Admin/reviews`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+export const getGetApiAdminReviewsQueryKey = (params?: GetApiAdminReviewsParams,) => {
+    return [`http://localhost:8080/api/Admin/reviews`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getGetApiAdminReviewsQueryOptions = <TData = Awaited<ReturnType<typeof getApiAdminReviews>>, TError = unknown>(params?: GetApiAdminReviewsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReviews>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAdminReviewsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAdminReviews>>> = ({ signal }) => getApiAdminReviews(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReviews>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAdminReviewsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAdminReviews>>>
+export type GetApiAdminReviewsQueryError = unknown
+
+
+export function useGetApiAdminReviews<TData = Awaited<ReturnType<typeof getApiAdminReviews>>, TError = unknown>(
+ params: undefined |  GetApiAdminReviewsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReviews>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminReviews>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminReviews>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAdminReviews<TData = Awaited<ReturnType<typeof getApiAdminReviews>>, TError = unknown>(
+ params?: GetApiAdminReviewsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReviews>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminReviews>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminReviews>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAdminReviews<TData = Awaited<ReturnType<typeof getApiAdminReviews>>, TError = unknown>(
+ params?: GetApiAdminReviewsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReviews>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiAdminReviews<TData = Awaited<ReturnType<typeof getApiAdminReviews>>, TError = unknown>(
+ params?: GetApiAdminReviewsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReviews>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAdminReviewsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+export const getApiAdminReviewsStats = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxios<ReviewStatsDtoApiResponse>(
+      {url: `http://localhost:8080/api/Admin/reviews/stats`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getGetApiAdminReviewsStatsQueryKey = () => {
+    return [`http://localhost:8080/api/Admin/reviews/stats`] as const;
+    }
+
+    
+export const getGetApiAdminReviewsStatsQueryOptions = <TData = Awaited<ReturnType<typeof getApiAdminReviewsStats>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReviewsStats>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAdminReviewsStatsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAdminReviewsStats>>> = ({ signal }) => getApiAdminReviewsStats(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReviewsStats>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAdminReviewsStatsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAdminReviewsStats>>>
+export type GetApiAdminReviewsStatsQueryError = unknown
+
+
+export function useGetApiAdminReviewsStats<TData = Awaited<ReturnType<typeof getApiAdminReviewsStats>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReviewsStats>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminReviewsStats>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminReviewsStats>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAdminReviewsStats<TData = Awaited<ReturnType<typeof getApiAdminReviewsStats>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReviewsStats>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminReviewsStats>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminReviewsStats>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAdminReviewsStats<TData = Awaited<ReturnType<typeof getApiAdminReviewsStats>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReviewsStats>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiAdminReviewsStats<TData = Awaited<ReturnType<typeof getApiAdminReviewsStats>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReviewsStats>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAdminReviewsStatsQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+export const getApiAdminReviewsId = (
+    id: number,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxios<AdminReviewDtoApiResponse>(
+      {url: `http://localhost:8080/api/Admin/reviews/${id}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getGetApiAdminReviewsIdQueryKey = (id: number,) => {
+    return [`http://localhost:8080/api/Admin/reviews/${id}`] as const;
+    }
+
+    
+export const getGetApiAdminReviewsIdQueryOptions = <TData = Awaited<ReturnType<typeof getApiAdminReviewsId>>, TError = unknown>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReviewsId>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAdminReviewsIdQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAdminReviewsId>>> = ({ signal }) => getApiAdminReviewsId(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReviewsId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAdminReviewsIdQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAdminReviewsId>>>
+export type GetApiAdminReviewsIdQueryError = unknown
+
+
+export function useGetApiAdminReviewsId<TData = Awaited<ReturnType<typeof getApiAdminReviewsId>>, TError = unknown>(
+ id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReviewsId>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminReviewsId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminReviewsId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAdminReviewsId<TData = Awaited<ReturnType<typeof getApiAdminReviewsId>>, TError = unknown>(
+ id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReviewsId>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAdminReviewsId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAdminReviewsId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAdminReviewsId<TData = Awaited<ReturnType<typeof getApiAdminReviewsId>>, TError = unknown>(
+ id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReviewsId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiAdminReviewsId<TData = Awaited<ReturnType<typeof getApiAdminReviewsId>>, TError = unknown>(
+ id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAdminReviewsId>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAdminReviewsIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+export const postApiAdminReviewsModerate = (
+    adminReviewActionDto: AdminReviewActionDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxios<BooleanApiResponse>(
+      {url: `http://localhost:8080/api/Admin/reviews/moderate`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: adminReviewActionDto, signal
+    },
+      );
+    }
+  
+
+
+export const getPostApiAdminReviewsModerateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAdminReviewsModerate>>, TError,{data: AdminReviewActionDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAdminReviewsModerate>>, TError,{data: AdminReviewActionDto}, TContext> => {
+
+const mutationKey = ['postApiAdminReviewsModerate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAdminReviewsModerate>>, {data: AdminReviewActionDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiAdminReviewsModerate(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAdminReviewsModerateMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAdminReviewsModerate>>>
+    export type PostApiAdminReviewsModerateMutationBody = AdminReviewActionDto
+    export type PostApiAdminReviewsModerateMutationError = unknown
+
+    export const usePostApiAdminReviewsModerate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAdminReviewsModerate>>, TError,{data: AdminReviewActionDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAdminReviewsModerate>>,
+        TError,
+        {data: AdminReviewActionDto},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiAdminReviewsModerateMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    export const postApiAdminReviewsModerateBulk = (
+    bulkReviewActionDto: BulkReviewActionDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxios<BooleanApiResponse>(
+      {url: `http://localhost:8080/api/Admin/reviews/moderate/bulk`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: bulkReviewActionDto, signal
+    },
+      );
+    }
+  
+
+
+export const getPostApiAdminReviewsModerateBulkMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAdminReviewsModerateBulk>>, TError,{data: BulkReviewActionDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postApiAdminReviewsModerateBulk>>, TError,{data: BulkReviewActionDto}, TContext> => {
+
+const mutationKey = ['postApiAdminReviewsModerateBulk'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiAdminReviewsModerateBulk>>, {data: BulkReviewActionDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiAdminReviewsModerateBulk(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiAdminReviewsModerateBulkMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAdminReviewsModerateBulk>>>
+    export type PostApiAdminReviewsModerateBulkMutationBody = BulkReviewActionDto
+    export type PostApiAdminReviewsModerateBulkMutationError = unknown
+
+    export const usePostApiAdminReviewsModerateBulk = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAdminReviewsModerateBulk>>, TError,{data: BulkReviewActionDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiAdminReviewsModerateBulk>>,
+        TError,
+        {data: BulkReviewActionDto},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiAdminReviewsModerateBulkMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
